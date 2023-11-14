@@ -1,0 +1,102 @@
+image_size_conf:
+  -
+    image: LowResolution
+    image_size_params:
+      h: 768
+      w: 1024
+  -
+    image: HighResolution
+    image_size_params:
+      h: 4096
+      w: 6144
+figures:
+  -
+    FigureClass: SmallCircle
+    figure_params:
+      margin: 40
+      num: 1
+      gap: 40
+      radius: 20
+      default_angle: 88
+      # default_angle: 70
+      corner radius: None
+      h: None
+      w: None
+      color: 255
+  -
+    FigureClass: BigCircle
+    figure_params:
+      margin: 40
+      num: 1
+      gap: 40
+      radius: 50
+      default_angle: 88
+      # default_angle: 70
+      corner radius: None
+      h: None
+      w: None
+      color: 255
+  -
+    FigureClass: SmallSquare
+    figure_params:
+      margin: 40
+      num: 1
+      gap: 40
+      radius: 20
+      default_angle: 88
+      # default_angle: 70
+      corner radius: 10
+      h: 40
+      w: 40
+      color: 255
+  -
+    FigureClass: BigSquare
+    figure_params:
+      margin: 40
+      num: 1
+      gap: 40
+      radius: 20
+      default_angle: 88
+      # default_angle: 70
+      corner radius: 20
+      h: 100
+      w: 100
+      color: 255
+  -
+    FigureClass: SmallRhomb
+    figure_params:
+      margin: 40
+      num: 1
+      gap: 40
+      radius: 20
+      default_angle: 88
+      # default_angle: 70
+      corner radius: 10
+      h: 40
+      w: 40
+      color: 255
+  -
+    FigureClass: BigRhomb
+    figure_params:
+      margin: 40
+      num: 1
+      gap: 40
+      radius: 20
+      default_angle: 88
+      corner radius: 20
+      h: 80
+      w: 80
+      color: 255
+  -
+    FigureClass: HorizontalLines
+    figure_params:
+      margin: 40
+      num: 6
+      gap: 30
+      radius: None
+      default_angle: 88
+      corner radius: 40
+      # default_angle: 70
+      h: 720
+      w: 50
+      color: 255
