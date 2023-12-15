@@ -39,27 +39,27 @@ def transform(img, ext, int):
                 if dist[index] < min_dist :
                     min_dist = dist[index].item()
                     nearest_point = cont_int[index] 
-                    if nearest_point[0] == point[0] and nearest_point[1] == point[1]:
-                        dist_ = 1
-                    else:
-                        dist_ = np.sqrt((point[0] - nearest_point[0])**2 + (point[1] - nearest_point[1])**2).astype(np.int32)
-                        # print(min_dist, dist_)
-                        dist_ = dist_.item()
-                dist_ += 1
-                
-                if dist_ == 0:
-                    dist_ = 1
-                discrete_line = list(zip(*line(*point, *nearest_point))) # find all pixels from the line
-                # discrete_line_x = np.array(list(zip(*discrete_line))[0])
-                if len(discrete_line) > 1:
-                    mid_point = [(point[0] + nearest_point[0])//2, (point[1] + nearest_point[1])//2]
                     prev = [compute_previous_pixel(point, nearest_point)]
                     next = [compute_next_pixel(point, nearest_point)]
+
+                    
+                    # if nearest_point[0] == point[0] and nearest_point[1] == point[1]:
+                    #     dist_ = 1
+                    # else:
+                        # dist_ = np.sqrt((point[0] - nearest_point[0])**2 + (point[1] - nearest_point[1])**2).astype(np.int32)
+                    # dist_ = np.sqrt((prev[0][0] - nearest_point[0])**2 + (prev[0][1] - nearest_point[1])**2).astype(np.int32)
+                    
+                    # print(min_dist, dist_)
+                    # dist_ = dist_.item()
+                    discrete_line = list(zip(*line(*point, *nearest_point))) # find all pixels from the line
+                    # discrete_line = list(zip(*line(*point, *nearest_point))) # find all pixels from the line
+                    
+                    dist_ = len(discrete_line)
                 # print(next)
 
                 angle = np.arctan(700 / (dist_ * 12))
-                cv2.line(width_img, point, nearest_point, dist_, 3)
-                cv2.line(angles_img, point, nearest_point, angle, 2)
+                if dist_ <= 10: cv2.line(width_img, point, nearest_point, dist_, 3)
+                if dist_ <= 10:cv2.line(angles_img, point, nearest_point, angle, 2)
 
                 if len(discrete_line) == 1:
                     height_vals = [color_back - 2]
@@ -69,7 +69,9 @@ def transform(img, ext, int):
                     height_vals = [((k_ * ((color_back - color_hole) / dist_)) + color_hole) for k_ in range(0, dist_+2)]
                     discrete_line_ = discrete_line + next
 
-                draw_gradient_line(color_map, point, discrete_line_, height_vals, thickness=3)
+                # if dist_ <= 10: draw_gradient_line(color_map, point, discrete_line_, height_vals, thickness=3)
+                # else: draw_gradient_line(color_map, point, discrete_line_, height_vals[-1::-1], thickness=1)
+                draw_gradient_line(color_map, point, discrete_line_, height_vals[-1::-1], thickness=3)
 
                 # calculate new angles
                 if dist_ >= 3:
@@ -94,7 +96,7 @@ def transform(img, ext, int):
                         a,b,c = coefs[0]
                         y_parabola = parabola(x_plot, a, b, c)
                         heights = y_parabola
-                        draw_gradient_line(new_angles, point, discrete_line, np.abs(y_parabola), thickness=5)
+                        draw_gradient_line(new_angles, point, discrete_line, np.abs(y_parabola), thickness=2)
                     # else:
                     #     val = angle
                     #     cv2.line(new_angles, point, nearest_point, val, 4)
@@ -171,25 +173,24 @@ def transform(img, ext, int):
                 if dist[index] < min_dist :
                     min_dist = dist[index].item()
                     nearest_point = cont_ext[index]
-                    if nearest_point[0] == point[0] and nearest_point[1] == point[1]:
-                        dist_ = 1
-                    else:
-                        # print((point[0] - nearest_point[0])**2 + (point[1] - nearest_point[1]))
-                        dist_ = np.sqrt((point[0] - nearest_point[0])**2 + (point[1] - nearest_point[1])**2).astype(np.int32)
-                        # print(min_dist, dist_)
-                        dist_ = dist_.item()
-                dist_ += 1
+                    # prev = [compute_previous_pixel(point, nearest_point)]
+                    next = [compute_next_pixel(point, nearest_point)]
+                    prev = [compute_previous_pixel(point, nearest_point)]
+
+                    discrete_line = list(zip(*line(*point, *next[0]))) # find all pixels from the line
+                    dist_ = len(discrete_line)
+                    # if nearest_point[0] == point[0] and nearest_point[1] == point[1]:
+                    #     dist_ = 1
+                    # else:
+                        # dist_ = np.sqrt((point[0] - nearest_point[0])**2 + (point[1] - nearest_point[1])**2).astype(np.int32)
+                    # dist_ = np.sqrt((prev[0][0] - nearest_point[0])**2 + (prev[0][1] - nearest_point[1])**2).astype(np.int32)
+                    # dist_ = np.sqrt((next[0][0] - nearest_point[0])**2 + (next[0][1] - nearest_point[1])**2).astype(np.int32)
+                    
+                    # dist_ = dist_.item()
+
+                # dist_ += 1
                 if dist_ == 0:
                     dist_ = 1
-
-                # if dist_ > 10:
-                #     dist_ = 10
-                discrete_line = list(zip(*line(*point, *nearest_point))) # find all pixels from the line
-                # discrete_line_x = np.array(list(zip(*discrete_line))[0])
-                if len(discrete_line) > 1:
-                    mid_point = [(point[0] + nearest_point[0])//2, (point[1] + nearest_point[1])//2]
-                    prev = [compute_previous_pixel(point, nearest_point)]
-                    next = [compute_next_pixel(point, nearest_point)]
 
                 angle = np.arctan(700 / (dist_ * 12))
                 cv2.line(width_img, point, nearest_point, dist_, 3)
@@ -204,11 +205,14 @@ def transform(img, ext, int):
                     discrete_line_ = discrete_line + next
 
                 # discrete_line_ =discrete_line + next
-                draw_gradient_line(color_map, point, discrete_line_, height_vals, thickness=3)
+                # draw_gradient_line(color_map, point, discrete_line_, height_vals, thickness=3)
+                # if dist_ <= 10:draw_gradient_line(color_map, point, discrete_line_, height_vals[-1::-1], thickness=3)
+                if dist_ > 10:
+                    if point[0] != nearest_point[0] and point[1] != nearest_point[1]:
+                        draw_gradient_line(color_map, point, discrete_line_, height_vals, thickness=3)
+                        
+                # if dist_ >= 3:
 
-
-                # calculate new angles
-                if dist_ >= 3:
 
                     # firct variant
 
@@ -230,7 +234,39 @@ def transform(img, ext, int):
                         a,b,c = coefs[0]
                         y_parabola = parabola(x_plot, a, b, c)
                         heights = y_parabola
-                        draw_gradient_line(new_angles, point, discrete_line, np.abs(y_parabola), thickness=5)
+                        # print(y_parabola)
+                        draw_gradient_line(new_angles, point, discrete_line, np.abs(y_parabola), thickness=2)
+                if dist_ <= 10:
+                    draw_gradient_line(color_map, point, discrete_line_, height_vals, thickness=3)
+                     
+                # calculate new angles
+                if dist_ >= 3 and dist_ <= 10:
+                        
+                # if dist_ >= 3:
+
+
+                    # firct variant
+
+                    # if dist_ > 5:
+                    #     k = dist_/10
+                    #     # if k > 1:
+                    #     # print(dist, k, angle)
+                    #     if k < 1:
+                    #         val = angle*k
+                    #     else:
+                    #         val = angle/k
+
+                        val = angle * 0.9
+                        y_mean = val
+                        y_0 = val/2
+                        y_n = val/2
+                        x_plot = np.arange(0, len(discrete_line))
+                        coefs = curve_fit(parabola, [x_plot[0], x_plot[len(x_plot)//2], x_plot[-1]], [y_0, y_mean, y_n])
+                        a,b,c = coefs[0]
+                        y_parabola = parabola(x_plot, a, b, c)
+                        heights = y_parabola
+                        # print(y_parabola)
+                        draw_gradient_line(new_angles, point, discrete_line, np.abs(y_parabola), thickness=2)
                     # else:
                     #     val = angle
                     #     cv2.line(new_angles, point, nearest_point, val, 4)
@@ -325,13 +361,13 @@ def transform(img, ext, int):
 
     # mask2 = width_img < 4
     new_angles_copy = new_angles.copy()
-    new_angles = cv2.GaussianBlur(new_angles, (7, 7), 0)
+    # new_angles = cv2.GaussianBlur(new_angles, (7, 7), 0)
     # new_angles[mask2] = new_angles_copy[mask2]
     new_angles[mask] = 0
-    angles_img = cv2.GaussianBlur(angles_img, (7, 7), 0)
+    # angles_img = cv2.GaussianBlur(angles_img, (7, 7), 0)
     # angles_img = cv2.GaussianBlur(angles_img, (3, 3), 0)
 
-    color_map = cv2.GaussianBlur(color_map, (7, 7), 0)
+    # color_map = cv2.GaussianBlur(color_map, (7, 7), 0)
 
-    # return width_img, angles_img, new_angles, color_map
-    return width_img
+    return width_img, angles_img, new_angles, color_map
+    # return width_img

@@ -113,38 +113,37 @@ def compute_next_pixel(first_point, last_point, distance=1):
 
 
 
-def formula_second(img, angles, color_map, k, file_name, save_dir):
-    print(f'{save_dir}/{file_name}')
-    signal = np.zeros_like(img, dtype=np.float32)
+# def formula_second(img, angles, color_map, k, file_name, save_dir):
+#     print(f'{save_dir}/{file_name}')
+#     signal = np.zeros_like(img, dtype=np.float32)
 
 
-    alpha_bord = angles[img == 128]
+#     alpha_bord = angles[img == 128]
 
-    alpha_bord[alpha_bord==alpha_bord.min()] = np.radians(1)
+#     alpha_bord[alpha_bord==alpha_bord.min()] = np.radians(1)
 
-    alpha_back = angles[img == 0]
-    print(np.unique(alpha_back))
-    alpha_hole = angles[img == 255]
+#     alpha_back = angles[img == 0]
+#     alpha_hole = angles[img == 255]
 
-    # k = k * 
-    signal[img == 0] = (k*(1/(np.abs(np.cos(np.radians(alpha_back + 1)))**(0.87)) - 1) + 1) * color_map[img==0]
+#     # k = k * 
+#     signal[img == 0] = (k*(1/(np.abs(np.cos(np.radians(alpha_back + 1)))**(0.87)) - 1) + 1) * color_map[img==0]
 
-    signal[img == 128] = (k * (1/(np.abs(np.cos(np.radians(90)-(np.radians(180 - 90) - alpha_bord)))**(0.87)) - 1) + 1) *color_map[img==128]
-
-
-    signal[img == 255] = (k * (1 / (np.abs(np.cos(np.radians(alpha_hole + 1)))**(1.1)) - 1) + 1) * color_map[img==255]
-
-    signal = np.clip(signal, 0, 255)
-    # signal_mask = signal[img != 128]
-    signal = cv2.GaussianBlur(signal, (11,11), 0)
-    # signal = cv2.GaussianBlur(signal, (9,9), 0)
-
-    # signal[img != 128] = signal
-
-    # cv2.imwrite(f'{save_dir}{file_name[:-4]}_signal_k{k}_6.png', signal.astype(np.uint8))
-    cv2.imwrite(f'{save_dir}/{file_name[:-4]}.png', signal.astype(np.uint8))
-    # cv2.imwrite(f'{save_dir}/{file_name}', signal.astype(np.uint8))
+#     signal[img == 128] = (k * (1/(np.abs(np.cos(np.radians(90)-(np.radians(180 - 90) - alpha_bord)))**(0.87)) - 1) + 1) *color_map[img==128]
 
 
+#     signal[img == 255] = (k * (1 / (np.abs(np.cos(np.radians(alpha_hole + 1)))**(1.1)) - 1) + 1) * color_map[img==255]
 
-    return signal
+#     signal = np.clip(signal, 0, 255)
+#     # signal_mask = signal[img != 128]
+#     signal = cv2.GaussianBlur(signal, (11,11), 0)
+#     # signal = cv2.GaussianBlur(signal, (9,9), 0)
+
+#     # signal[img != 128] = signal
+
+#     # cv2.imwrite(f'{save_dir}{file_name[:-4]}_signal_k{k}_6.png', signal.astype(np.uint8))
+#     cv2.imwrite(f'{save_dir}/{file_name[:-4]}.png', signal.astype(np.uint8))
+#     # cv2.imwrite(f'{save_dir}/{file_name}', signal.astype(np.uint8))
+
+
+
+#     return signal
