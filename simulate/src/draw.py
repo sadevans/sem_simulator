@@ -16,9 +16,6 @@ def simulate_squares_1120(radius=50):
     center_coordinates9 = (1700, 100)
     center_coordinates10 = (1900, 100)
 
-
-
-
     radius = radius
 
     color_border = (128, 0, 0)

@@ -15,7 +15,6 @@ print(device)
 
 
 def transform_w_bezier(img, ext, int):
-
     color_back = 110
     color_hole = 85
 
@@ -118,8 +117,6 @@ def transform_w_bezier(img, ext, int):
 
 def transform_w_parabola(img, ext, int):
     # ext, int = ext.tolist(), int.tolist()
-
-
     color_back = 110
     color_hole = 85
 
@@ -129,7 +126,6 @@ def transform_w_parabola(img, ext, int):
     color_map = np.zeros_like(img, dtype=np.float32)
     color_map[img == 0] = color_back
     color_map[img == 255] = color_hole
-
 
     for cont_ext, cont_int in zip(ext, int):
         for point in cont_ext:
@@ -154,8 +150,6 @@ def transform_w_parabola(img, ext, int):
                     height_vals = [((k_ * ((color_back - color_hole) / dist_)) + color_hole) for k_ in range(0, dist_+2)]
                     discrete_line_ = discrete_line + next
 
-                # if dist_ <= 10: draw_gradient_line(color_map, point, discrete_line_, height_vals, thickness=3)
-                # else: draw_gradient_line(color_map, point, discrete_line_, height_vals[-1::-1], thickness=1)
                 draw_gradient_line(color_map, point, discrete_line_, height_vals[-1::-1], thickness=3)
 
                 # calculate new angles

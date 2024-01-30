@@ -66,6 +66,233 @@ def bezier(line, t, prev, color_hole, color_back):
     vals = point1[1]*(1-t)**3 + point2[1]*3*t*(1-t)**2 + point3[1]*3*t**2*(1-t) + point4[1]*t**3
     return x, vals
 
+def transform_w_bezier_new(img, ext, int):
+    color_back = 110
+    color_hole = 85
+
+    width_img = np.zeros_like(img, dtype=np.float32)
+    new_angles = np.zeros_like(img, dtype=np.float32)
+    color_map = np.zeros_like(img, dtype=np.float32)
+    # color_map[img == 0] = color_back
+    # color_map[img == 255] = color_hole
+    for cont_ext, cont_int in zip(ext, int):
+        for point in cont_ext:
+                min_dist = float('inf')
+                index, dist = closest_point(point, cont_int)
+                if dist[index] < min_dist :
+                    min_dist = dist[index].item()
+                    nearest_point = cont_int[index] 
+                    prev = [compute_previous_pixel(point, nearest_point)]
+                    # discrete_line = list(zip(*line(*point, *nearest_point))) # find all pixels from the line
+                    discrete_line = list(zip(*line(*prev[0], *nearest_point))) # find all pixels from the line
+                    dist_ = len(discrete_line) - 1
+                    # dist_ = len(discrete_line)
+
+                    # print(dist_)
+                new_line = np.zeros(dist_*12, dtype=np.float32)
+                x, y = bezier(new_line, np.linspace(0, 1, len(new_line)), 0.0, 100, 700)
+                # print('y shape: ', y.shape)
+
+                x, colors = bezier(new_line, np.linspace(0, 1, len(new_line)), 0.0, color_hole, color_back)
+                # new_y = y[::12]
+                reshaped_y  = np.array(y).reshape(-1, 12)  # Разбиваем на подмассивы по 12 элементов
+                averages_y = np.max(reshaped_y, axis=1)
+
+                reshaped_colors  = np.array(colors).reshape(-1, 12)  # Разбиваем на подмассивы по 12 элементов
+                angles = np.arctan(np.abs(np.gradient(y)))
+                new_angl = angles[::12]
+                reshaped_angls  = np.array(angles).reshape(-1, 12)  # Разбиваем на подмассивы по 12 элементов
+                averages_angls = np.max(reshaped_angls, axis=1)
+                max_indices = np.argmax(reshaped_angls, axis=1)
+                averages_colors = reshaped_colors[np.arange(len(reshaped_colors)), max_indices]
+                # print(averages_colors)
+                if len(averages_angls) != dist_:
+                    print('dist = {:.2f}, len angls = {:.2f}, len line = {:.2f}'.format(dist_, len(averages_angls), len(discrete_line)))
+                
+                draw_gradient_line(color_map, point, discrete_line, averages_colors, thickness=4)
+                draw_gradient_line(new_angles, point, discrete_line, averages_angls, thickness=2)
+                cv2.line(width_img, point, nearest_point, dist_, 3)
+
+
+    for cont_ext, cont_int in zip(ext, int):
+        for point in cont_int:
+                min_dist = float('inf')
+                index, dist = closest_point(point, cont_ext)
+                if dist[index] < min_dist :
+                    min_dist = dist[index].item()
+                    nearest_point = cont_ext[index]
+                    # prev = [compute_previous_pixel(point, nearest_point)]
+                    next = [compute_next_pixel(point, nearest_point)]
+                    # if point[0] != nearest_point[0] and point[1] != nearest_point[1]:
+                    discrete_line = list(zip(*line(*point, *next[0]))) # find all pixels from the line
+                    # else:
+                    distance = np.sqrt((point[0] - next[0][0])**2 + (point[1] - next[0][1])**2)
+
+                    # discrete_line = list(zip(*line(*point, *nearest_point)))
+                    dist_ = len(discrete_line)
+                    # print(dist_)
+
+                if dist_ == 0:
+                    dist_ = 1
+
+                # print(distance, dist_)
+                new_line = np.zeros(dist_*12, dtype=np.float32)
+                x, y = bezier(new_line, np.linspace(0, 1, len(new_line)), 255.0, 100, 700)
+                x, colors = bezier(new_line, np.linspace(0, 1, len(new_line)), 255.0, color_hole, color_back)
+                # print('length y: ', len(y))
+                # print('y shape: ', y.shape)
+                # new_y = y[::12]
+                reshaped_y  = np.array(y).reshape(-1, 12)  # Разбиваем на подмассивы по 12 элементов
+                averages_y = np.max(reshaped_y, axis=1)
+
+                reshaped_colors  = np.array(colors).reshape(-1, 12)  # Разбиваем на подмассивы по 12 элементов
+                # angles = np.arctan(np.abs(np.gradient(y))) if len(y) > 24 else np.array([1.57])
+                angles = np.arctan(np.abs(np.gradient(y)))
+
+
+                # new_angl = angles[::12]
+                reshaped_angls  = np.array(angles).reshape(-1, 12)  # Разбиваем на подмассивы по 12 элементов
+                averages_angls = np.max(reshaped_angls, axis=1)
+                max_indices = np.argmax(reshaped_angls, axis=1)
+                averages_colors = reshaped_colors[np.arange(len(reshaped_colors)), max_indices]
+                if len(averages_angls) != dist_:
+                    print('dist = {:.2f}, len angls = {:.2f}, len line = {:.2f}'.format(dist_, len(averages_angls), len(discrete_line))) 
+                # if new_angles[point[1], point[0]]  == 0 or dist_>10:
+                if new_angles[point[1], point[0]]  == 0:
+                # if new_angles[point[0], point[1]]  == 0:
+
+
+                    # if dist_>10:
+
+                        # draw_gradient_line(color_map, nearest_point, discrete_line[-1::-1], averages_colors[-1::-1], thickness=2)
+                        # draw_gradient_line(new_angles, nearest_point, discrete_line[-1::-1], averages_angls[-1::-1], thickness=2)
+                        # draw_gradient_line(color_map, point, discrete_line, averages_colors, thickness=2)
+                        # draw_gradient_line(new_angles, point, discrete_line, averages_angls, thickness=2)
+                    draw_gradient_line(new_angles, next[0], discrete_line[-1::-1], averages_angls[-1::-1], thickness=2)
+                if color_map[point[1], point[0]]  == 0:
+                # if color_map[point[0], point[1]]  == 0:
+
+
+                    # if dist_>10:
+
+                        # draw_gradient_line(color_map, nearest_point, discrete_line[-1::-1], averages_colors[-1::-1], thickness=2)
+                        # draw_gradient_line(new_angles, nearest_point, discrete_line[-1::-1], averages_angls[-1::-1], thickness=2)
+                        # draw_gradient_line(color_map, point, discrete_line, averages_colors, thickness=2)
+                        # draw_gradient_line(new_angles, point, discrete_line, averages_angls, thickness=2)
+                    draw_gradient_line(color_map, next[0], discrete_line[-1::-1], averages_colors[-1::-1], thickness=2)
+
+                cv2.line(width_img, point, nearest_point, dist_, 2)
+                
+
+
+                    # else:    
+                    # draw_gradient_line(new_angles, nearest_point, discrete_line[-1::-1], averages_angls[-1::-1], thickness=2)
+                    # draw_gradient_line(new_angles, point, discrete_line, averages_angls, thickness=2)
+                    # draw_gradient_line(new_angles, next[0], discrete_line[-1::-1], averages_angls[-1::-1], thickness=2)
+
+
+
+    img_cp = img.copy()
+    mask = img_cp != 128 
+    width_img[mask] = 0
+    new_angles[mask] = 0
+    color_map[img == 0] = color_back
+    color_map[img == 255] = color_hole
+
+    zeros = np.where((color_map==0) & (img==128))
+    # for pixel in zero_pixels:
+    if len(zeros[0]) > 0:
+        # print(np.unique(color_map))
+        # print(ext[0])
+        tmp = np.zeros_like(img)
+        cv2.drawContours(tmp, [ext[0]], -1, 255, 0)
+        c = detect_cont(tmp)
+        ext = np.argwhere(tmp > 0)
+        ext = np.array([list(reversed(ex)) for ex in ext])
+        
+        for i in range(len(zeros[0])):
+            # print(zeros[0][i], zeros[1][i])
+            # point = (pixel[0], pixel[1])
+            point = (zeros[0][i], zeros[1][i])
+
+            index_int, dist_int = closest_point(point, cont_int)
+            index_ext, dist_ext = closest_point(point, ext)
+            nearest_point_int = cont_int[index_int]
+            nearest_point_ext = ext[index_ext]
+            # index_int, dist_int = closest_point(nearest_point_ext, cont_int)
+
+            
+
+            # fig, ax = plt.subplots(1, 1, figsize=(10,10))
+
+            # ax.imshow(img)
+            # ax.scatter([point[1], nearest_point_ext[1]], [point[0], nearest_point_ext[0]])
+            # plt.show()
+
+            discrete_line_int = list(zip(*line(*point, *nearest_point_int)))
+            discrete_line_ext = list(zip(*line(*point, *nearest_point_ext)))
+
+            # distance_int = np.sqrt((point[0] - nearest_point_int[0])**2 + (point[1] - nearest_point_int[1])**2)
+            # distance_ext = np.sqrt((point[0] - nearest_point_ext[0])**2 + (point[1] - nearest_point_ext[1])**2)
+            distance_int = len(discrete_line_int)
+            distance_ext = len(discrete_line_ext)
+            # print(distance_ext, distance_int)
+            # if distance_int > 100 or distance_int > 100:
+            #     tmp = np.zeros_like(img)
+            #     cv2.drawContours(tmp, )
+            # val = color_hole+ np.abs(width_img[point[1], point[0]] - distance_int)*np.tan(new_angles[point[1], point[0]])
+            # print(np.tan(new_angles[point[1], point[0]]), np.tan(new_angles[point[0], point[1]]))
+            # val = color_back - np.abs(distance_int)*np.tan(new_angles[point[0], point[1]])
+            # val = np.cumsum(np.tan(new_angles[point[0], point[1]]))*np.abs(distance_int)
+            # print('color: ', val)
+            # if val > np.abs(100):
+            #     val = 110 - random.randint(1,3)
+
+
+            # print(distance_int, distance_ext)
+            # val = 
+            if distance_int < distance_ext:
+                val = color_back - distance_int*np.tan(new_angles[point[0], point[1]])/(distance_ext + distance_int)
+                # val = color_back - np.abs(width_img[point[0],point[1]] - distance_int)*np.tan(new_angles[point[0], point[1]])
+                # print('color: ', val)
+                # if val < 0:
+                #     val = color_hole
+                    # print(val, distance_int)
+            else:
+                val = color_hole + distance_ext*np.tan(new_angles[point[0], point[1]])/(distance_ext + distance_int)
+                # val = np.abs(width_img[point[0], point[1]] - distance_ext)*np.tan(new_angles[point[0], point[1]]) + color_hole
+                # print('color: ', val)
+
+            if val == 85.0:
+                # val = 110 -  random.randint(10, 14)
+                print('HERE')
+
+                # val = val + random.uniform(10, 14)
+                # val = val + random.randint(10, 14)
+                val = (110.0 + 85.0)/2 -random.randint(10, 14)
+
+
+
+            elif val == 110.0:
+                # print('NOW HERE')
+                # val = val - random.randint(10,14)
+                val = (110.0 + 85.0)/2 -random.randint(10, 14)
+
+                # val = val - random.uniform(0.3, 0.7)
+                #     val = color_back
+                    # print(val, distance_ext, width_img[pixel[0], pixel[1]])
+            # print('val: ', val)
+            color_map[point[0], point[1]] = np.abs(val)
+    # plt.show()
+
+    # color_map[img == 0] = color_back
+    # color_map[img == 255] = color_hole
+    color_map[img == 0] = 0
+    color_map[img == 255] = 0
+    # print(np.unique(color_map))
+    # print(color_map.min())
+    return width_img, new_angles, color_map
+
 
 def transform1(img, ext, int):
     color_back = 110
@@ -371,9 +598,9 @@ if __name__ == '__main__':
     w = 4
     # circle2 = simulate_circle(w)
     # circle2 = simulate_circles(radius=50)
-    circle2 = simulate_squares(radius=50)
+    # circle2 = simulate_squares(radius=50)
     # circle2 = simulate_squares_1120(radius=50)
-    # circle2 = simulate_circles_1120(radius=50)
+    circle2 = simulate_circles_1120(radius=50)
 
 
 
@@ -383,12 +610,14 @@ if __name__ == '__main__':
     # cv2.imwrite(f'circles_1120.png', circle2.astype(np.uint8))
 
     ext, int, circle2 = detect_contours(circle2)
-    width, color_map, new_angles = transform1(circle2, ext, int) # bezier
+    # width,  new_angles, color_map = transform_w_bezier_new(circle2, ext, int) # bezier
+    width, color_map,  new_angles = transform1(circle2, ext, int) # bezier
+
     # width, angles_img, new_angles, color_map = transform(circle2, ext, int) # parabola
     # width, angles_img, new_angles, color_map = transform_radius(circle2, ext, int) # parabola radius
     # k=0.125
-    # k = 0.125
-    k = 0.5
+    k = 0.125
+    # k = 0.5
     signal_second = formula_second(circle2, new_angles, color_map, k, 'signal_circles.png', '.')
     # cv2.imwrite(f'signal_circle1_{w}_{k}.png', signal_second.astype(np.uint8))
     # cv2.imwrite(f'signal_squares_bezier_{k}.png', signal_second.astype(np.uint8))
