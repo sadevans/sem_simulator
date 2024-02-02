@@ -5,12 +5,12 @@ import random
 import multiprocessing
 import time
 from skimage.draw import line
-from src.ImageClass import *
+from ImageClass import *
 
 
 class Solver():
     def __init__(self, algo: str, signal_formula: str, pixel_size: int, resist_thickness: int, k: float, E: float, masks: list, \
-                 dp2:tuple, dp3:tuple):
+                 recalculate:bool, dp2:tuple, dp3:tuple):
         # self.parent_ = parent
         self.algo = algo
         self.signal_formula = signal_formula
@@ -27,6 +27,7 @@ class Solver():
 
         self.dp2 = dp2
         self.dp3 = dp3
+        self.recalculate = recalculate
 
         self.i = 0
 
@@ -460,12 +461,14 @@ class Solver():
 
         alpha_back = angles[img == 0].copy()
         alpha_hole = angles[img == 255].copy()
-        signal[img == 0] = (self.k*(1/(np.abs(np.cos(np.radians(alpha_back + 1)))**(0.87)) - 1) + 1) * color_map[img==0]
+        signal[img == 0] = (self.k*(1/(np.abs(np.cos(np.radians(alpha_back)))**(0.87)) - 1) + 1) * color_map[img==0]
 
         # signal[img == 128] = (self.k * (1/(np.abs(np.cos(np.radians(90)-(np.radians(180 - 90) - alpha_bord)))**(0.87)) - 1) + 1) *color_map[img==128]
         signal[img == 128] = (self.k * (1/(np.abs(np.cos((alpha_bord)))**(0.87)) - 1) + 1) *color_map[img==128]
         
-        signal[img == 255] = (self.k * (1 / (np.abs(np.cos(np.radians(alpha_hole + 1)))**(1.1)) - 1) + 1) * color_map[img==255]
+        # signal[img == 255] = (self.k * (1 / (np.abs(np.cos(np.radians(alpha_hole + 1)))**(1.1)) - 1) + 1) * color_map[img==255]
+        signal[img == 255] = (self.k * (1 / (np.abs(np.cos(alpha_hole))**(1.1)) - 1) + 1) * color_map[img==255]
+
 
         signal = np.clip(signal, 0, 255)
 

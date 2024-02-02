@@ -5,13 +5,14 @@ import random
 import multiprocessing
 import time
 from skimage.draw import line
-from src.ImageClass import *
+from ImageClass import *
 
 
 class Solver():
-    def __init__(self, algo: str, signal_formula: str, pixel_size: int, resist_thickness: int, k: float, E: float, masks: list, \
+    def __init__(self, algo: str, signal_formula: str, pixel_size: int, resist_thickness: int, k: float, E: float, masks: list,\
                  dp2:tuple, dp3:tuple):
         # self.parent_ = parent
+        print(len(masks))
         self.algo = algo
         self.signal_formula = signal_formula
         self.pixel_size = pixel_size
@@ -24,6 +25,7 @@ class Solver():
         self.color_hole = 85
         self.k = k
         self.E = E
+        # self.recalculate = recalculate
 
         self.dp2 = dp2
         self.dp3 = dp3
@@ -33,7 +35,7 @@ class Solver():
 
         self.cpu_count = multiprocessing.cpu_count()
         # self.process()
-        if self.recalculate: self.process_pool()
+        self.process_pool()
 
 
     def draw_gradient_line(self, img, start_point, points, colors, thickness=4):
@@ -460,13 +462,20 @@ class Solver():
 
         alpha_back = angles[img == 0].copy()
         alpha_hole = angles[img == 255].copy()
-        signal[img == 0] = (self.k*(1/(np.abs(np.cos(np.radians(alpha_back + 1)))**(0.87)) - 1) + 1) * color_map[img==0]
+        # alpha_flash = angles[img == 100].copy()
+        # print('angles flash: ', np.unique(alpha_flash))
+        # print('color map in borders: ', np.unique(color_map[img==128]))
+        signal[img == 0] = (self.k*(1/(np.abs(np.cos(np.radians(alpha_back)))**(0.87)) - 1) + 1) * color_map[img==0]
 
         # signal[img == 128] = (self.k * (1/(np.abs(np.cos(np.radians(90)-(np.radians(180 - 90) - alpha_bord)))**(0.87)) - 1) + 1) *color_map[img==128]
         signal[img == 128] = (self.k * (1/(np.abs(np.cos((alpha_bord)))**(0.87)) - 1) + 1) *color_map[img==128]
         
-        signal[img == 255] = (self.k * (1 / (np.abs(np.cos(np.radians(alpha_hole + 1)))**(1.1)) - 1) + 1) * color_map[img==255]
+        signal[img == 255] = (self.k * (1 / (np.abs(np.cos(np.radians(alpha_hole)))**(1.1)) - 1) + 1) * color_map[img==255]
 
+        # signal[img == 100] = (self.k * (1/(np.abs(np.cos((alpha_flash)))**(0.87)) - 1) + 1) *color_map[img==100]
+        # print(1 / (np.abs(np.cos(np.radians(alpha_hole)))**(1.1)))
+        # print(np.radians(alpha_hole))
+        # print('where = 100:', np.unique(signal[img == 100]))
         signal = np.clip(signal, 0, 255)
 
         # signal = cv2.GaussianBlur(signal, (11,11), 0)
@@ -526,18 +535,19 @@ class Solver():
 
 
     def GetSignal(self, mask_obj):
-        if self.signal_formula == 'formula_k' : signal = self.GetSignalk(mask_obj.mask, mask_obj.angles_map, mask_obj.color_map)
-        elif self.signal_formula == 'formula_e' : signal = self.GetSignalE(mask_obj.mask, mask_obj.angles_map, mask_obj.color_map)
+        if self.signal_formula == 'formula_k' : mask_obj.signal = self.GetSignalk(mask_obj.mask, mask_obj.angles_map, mask_obj.color_map).copy()
+        elif self.signal_formula == 'formula_e' : mask_obj.signal = self.GetSignalE(mask_obj.mask, mask_obj.angles_map, mask_obj.color_map).copy()
+        # mask_obj.signal[mask_obj.mask==100] = mask_obj.signal[mask_obj.mask==128].min()
 
-        nonzero = np.argwhere(signal != 0)
-        for pixel in nonzero:
-            if mask_obj.mask[pixel[0], pixel[1]] != 0:
-                mask_obj.signal[pixel[0], pixel[1]] = signal[pixel[0], pixel[1]]
+        # nonzero = np.argwhere(signal != 0)
+        # for pixel in nonzero:
+        #     if mask_obj.mask[pixel[0], pixel[1]] != 0:
+        #         mask_obj.signal[pixel[0], pixel[1]] = signal[pixel[0], pixel[1]]
 
-            elif mask_obj.mask[pixel[0], pixel[1]] == 0:
-                mask_obj.signal[pixel[0], pixel[1]] = signal[pixel[0], pixel[1]]
+        #     elif mask_obj.mask[pixel[0], pixel[1]] == 0:
+        #         mask_obj.signal[pixel[0], pixel[1]] = signal[pixel[0], pixel[1]]
 
-        mask_obj.signal[mask_obj.signal == 0] = np.unique(mask_obj.signal)[1] + 1
+        # mask_obj.signal[mask_obj.signal == 0] = np.unique(mask_obj.signal)[1] + 1
         # before = mask_obj.signal[mask_obj.mask==128]
         before = mask_obj.signal[mask_obj.width_map < 3]
         mask_obj.signal = np.clip(cv2.GaussianBlur(mask_obj.signal, (11,11), 0), 0, 255)
@@ -579,6 +589,7 @@ class Solver():
             pool = multiprocessing.Pool(processes = self.cpu_count)
             for mask in pool.map(self.process_single_image, self.masks_list):
                 self.mask_objects.append(mask)
+            print(len(self.mask_objects))
         finally:
             pool.close()
             pool.join()
